@@ -20,11 +20,13 @@ from scipy.optimize import curve_fit
 from scipy.signal import sawtooth
 from scipy import stats
 
+# Need to set this environment variable for each computer
+ungl_data = os.environ['UNGL_DATA']
 
 # ---------------------------------------------------------
 #    Functions for Loading UNGL Data
 # ---------------------------------------------------------
-def load_stations(file='/Volumes/OptiHDD/data/GPS/unevada/llh'):
+def load_stations(file=os.path.join(ungl_data,'llh')):
     '''
     Get station names and positions from UNGL file
     '''
@@ -40,7 +42,7 @@ def load_steps(station=None):
     '''Load Unevada shifts for give 4 character station name '''
     #NOTE: isloate just EQ-related steps:
     #awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' steps.txt > steps_code2.txt
-    df = pd.read_csv('/Volumes/OptiHDD/data/GPS/unevada/steps_code2.txt',
+    df = pd.read_csv(os.path.join(ungl_data,'steps_code2.txt'),
                      names=['site', 'date', 'code','thresh_d','distance','mag','id'],
                      sep=r"\s*",
                      engine='python'
@@ -66,7 +68,7 @@ def load_midas(station=None):
     (See http://geodesy.unr.edu/NGLStationPages/decyr.txt for translation to YYMMMDD format)
     '''
     #!grep {station} /Volumes/OptiHDD/data/GPS/unevada/midas.IGS08.txt > midas.IGS08.station.txt  #just 1 station
-    df = pd.read_csv('/Volumes/OptiHDD/data/GPS/unevada/midas.IGS08.txt',
+    df = pd.read_csv(os.path.join(ungl_data,'midas.IGS08.txt'),
                      header=None,
                      names=['site', 'version', 'start', 'end', 'years', 'epochs', 'epochs_good', 'pairs',
                         'east', 'north', 'up', 'err_e', 'err_n', 'err_u', 'e0', 'n0', 'u0',
@@ -136,7 +138,7 @@ def decyear2date(decyear, inverse=False):
     Out[1]: 1990.0014000000001
 
     '''
-    df = pd.read_csv('/Volumes/OptiHDD/data/GPS/unevada/decyr.txt',
+    df = pd.read_csv(os.path.join(ungl_data,'decyr.txt'),
                      names=['date','decyear'],
                      sep=' ',
                      )
