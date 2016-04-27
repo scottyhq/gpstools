@@ -156,16 +156,17 @@ def decyear2date(decyear, inverse=False):
 # ---------------------------------------------------------
 #    Plotting Functions
 # ---------------------------------------------------------
-def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None, columns=['north', 'east','up'], axhline=False, title=''):
+def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None,
+             columns=['east', 'north','up'], axhline=False, title=''):
     #Plot daily positions
     fig, (ax,ax1,ax2) =  plt.subplots(3,1,sharex=True,figsize=(8.5,11))
-    ax.plot(df.index, df[columns[0]], 'b.', label='NS')
+    ax.plot(df.index, df[columns[0]], 'k.', label='EW')
     #ax.set_title('NS')
 
-    ax1.plot(df.index, df[columns[1]], 'g.', label='EW')
+    ax1.plot(df.index, df[columns[1]], 'k.', label='NS')
     #ax1.set_title('EW')
 
-    ax2.plot(df.index, df[columns[2]], 'r.', label='Z')
+    ax2.plot(df.index, df[columns[2]], 'k.', label='Z')
     #ax2.set_title('Z')
 
     # Add midas velocities
@@ -180,9 +181,9 @@ def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None, columns=['north', 'east
         E = [E0, E0 + dfMidas.east.values * dt] #dfMidas.e0.values not sure about this value
         N = [N0, N0 + dfMidas.north.values * dt]
         U = [U0,  U0 + dfMidas.up.values * dt]
-        ax.plot(X, N, 'k-' , lw=2, label='MIDAS')
-        ax1.plot(X, E, 'k-', lw=2 )
-        ax2.plot(X, U, 'k-', lw=2 )
+        ax.plot(X, E, 'm-' , lw=2, label='MIDAS')
+        ax1.plot(X, N, 'm-', lw=2 )
+        ax2.plot(X, U, 'm-', lw=2 )
 
     # Add discontinuities
     if isinstance(dfSteps, pd.DataFrame):
@@ -192,19 +193,19 @@ def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None, columns=['north', 'east
 
     # Add Function Fits
     if isinstance(dfFit, pd.DataFrame):
-        ax.plot(dfFit.index, dfFit.fit_north, 'k--' , lw=2, label='L2')
-        ax1.plot(dfFit.index.values, dfFit.fit_east.values, 'k--', lw=2)
-        ax2.plot(dfFit.index.values, dfFit.fit_up.values, 'k--', lw=2 )
+        ax.plot(dfFit.index, dfFit.fit_east, 'c-' , lw=3, label='fit')
+        ax1.plot(dfFit.index.values, dfFit.fit_north.values, 'c-', lw=3)
+        ax2.plot(dfFit.index.values, dfFit.fit_up.values, 'c-', lw=3)
 
     if axhline:
         for axes in (ax,ax1,ax2):
             axes.axhline(color='k',lw=1)
 
-    ax.legend(loc='upper left')
-    ax1.legend(loc='upper left')
-    ax2.legend(loc='upper left')
+    ax.legend(loc='upper left',frameon=True)
+    ax1.legend(loc='upper left',frameon=True)
+    ax2.legend(loc='upper left',frameon=True)
     plt.suptitle(title, fontsize=16)
-    plt.ylabel('Position [m]')
+    ax1.set_ylabel('Position [m]')
 
     months = pltdate.MonthLocator()
     years = pltdate.YearLocator()
@@ -212,8 +213,10 @@ def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None, columns=['north', 'east
         axes.xaxis.set_major_locator(years)
         axes.xaxis.set_minor_locator(months) #too much
         axes.fmt_xdata = pltdate.DateFormatter('%Y-%m-%d')
-        axes.grid(True, axis='x')
+        axes.grid(True)
 
+    plt.tick_params(axis='x', which='minor', length=5, top=False, bottom=True)
+    plt.tick_params(axis='x', which='major', length=10, top=False, bottom=True)
     fig.autofmt_xdate()
 
 
@@ -221,6 +224,51 @@ def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None, columns=['north', 'east
 # ---------------------------------------------------------
 #    Analysis Functions
 # ---------------------------------------------------------
+def find_nearest_trench_point(value):
+    path = '/Volumes/OptiHDD/data/plates/PLATES/PLATES_PlateBoundary_ArcGIS/trench.txt'
+    tlon,tlat = np.loadtxt(path,unpack=True)
+    idx = (np.abs(tlat-value)).argmin()
+    return np.array([tlat[idx], tlon[idx]])
+
+def get_geocentric_radius(latitude, a=6378.1370, b=6356.7523):
+    '''a is equitorial radius, b is polar radius, WGS84 Ellipsoid'''
+    latr = np.radians(latitude)
+    num = (a**2 * np.cos(latr))**2 + (b**2 * np.sin(latr))**2
+    denom = (a * np.cos(latr))**2 + (b * np.sin(latr))**2
+    radius = np.sqrt(num/denom)
+    return radius
+
+
+def add_trench_distance(df):
+    distance = np.zeros_like(df.lon)
+    for i in range(df.shape[0]):
+        gps_point = np.array( [ df.lat[i], df.lon[i] ])
+        trench_point = find_nearest_trench_point(gps_point[0])
+        distance[i] = spherical_dist(trench_point, gps_point)
+
+    df['distance'] = distance/1e3 #in km
+
+    return df
+
+
+#http://stackoverflow.com/questions/19413259/efficient-way-to-calculate-distance-matrix-given-latitude-and-longitude-data-in
+def spherical_dist(pos1, pos2, r=6371e3):
+    ''' positions given as (lat,lon), default is average earth radius'''
+    pos1 = pos1 * np.pi / 180
+    pos2 = pos2 * np.pi / 180
+    cos_lat1 = np.cos(pos1[..., 0])
+    cos_lat2 = np.cos(pos2[..., 0])
+    cos_lat_d = np.cos(pos1[..., 0] - pos2[..., 0])
+    cos_lon_d = np.cos(pos1[..., 1] - pos2[..., 1])
+    return r * np.arccos(cos_lat_d - cos_lat1 * cos_lat2 * (1 - cos_lon_d))
+# checked that it matches calculation from proj4/cartopy:
+# Distances with cartopy
+#from cartopy.geodesic import Geodesic
+#geod = Geodesic() #default ellipsoid
+#dutur = np.asarray(geod.inverse( (-70.769, -19.610), (-67.205542,-22.242005) )).T #distance and azimuths
+# distance in meters, azimuth is degrees clockwise from north
+
+
 def get_extrema(df, component, output=True):
     # Get all mins and max
     # since function is analytic, can find zeros of second derivative explicitly
@@ -437,9 +485,10 @@ def remove_eq2(df, eq, dt=120, showplot=False):
     return du, de, dn
 
 
-def myfit(x, y, F, guess):
+def myfit(x, y, F, guess, printresult=False):
     '''
     Add column with best-fit information to dataframe
+    NOTE: need to look into fixing parameters...
     '''
     popt, pcov = curve_fit(F, x, y, guess)
     result = F(x, *popt)
@@ -447,22 +496,22 @@ def myfit(x, y, F, guess):
     residuals = y - result
     rmse = np.sqrt((np.sum(residuals**2) / residuals.size))
 
-    print('myfit:', popt)
+    if printresult:
+        print('myfit:', popt)
+        # pretty-print OSU model params
+        print('OSU Fit:\n---------')
+        print('RMSE [mm] = {:.3e}'.format(rmse*1e3))
+        print('X0 [m] = {:.3f}'.format(popt[1]))
+        print('V [mm/yr] = {:.3f}'.format(popt[2]*1e3 ))
+        print('Step [mm] = {:.3f}'.format(popt[3]*1e3 ))
+        print('s1,c1,T1 [mm, mm, yr] = {:.3f}, {:.3f}, {:.3f}'.format(popt[5]*1e3,
+              popt[6]*1e3,
+              popt[9]))
+        print('s2,c2,T2 [mm, mm, yr] = {:.3f}, {:.3f}, {:.3f} '.format(popt[7]*1e3,
+          popt[8]*1e3,
+          popt[10]))
 
-    # pretty-print OSU model params
-    print('OSU Fit:\n---------')
-    print('RMSE [mm] = {:.3e}'.format(rmse*1e3))
-    print('X0 [m] = {:.3f}'.format(popt[1]))
-    print('V [mm/yr] = {:.3f}'.format(popt[2]*1e3 ))
-    print('Step [mm] = {:.3f}'.format(popt[3]*1e3 ))
-    print('s1,c1,T1 [mm, mm, yr] = {:.3f}, {:.3f}, {:.3f}'.format(popt[5]*1e3,
-          popt[6]*1e3,
-          popt[9]))
-    print('s2,c2,T2 [mm, mm, yr] = {:.3f}, {:.3f}, {:.3f} '.format(popt[7]*1e3,
-      popt[8]*1e3,
-      popt[10]))
-
-    return result
+    return result, popt, rmse
 
 # ---------------------------------------------------------
 #    Fitting Functions
