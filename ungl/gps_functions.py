@@ -193,7 +193,7 @@ def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None,
 
     # Add Function Fits
     if isinstance(dfFit, pd.DataFrame):
-        ax.plot(dfFit.index, dfFit.fit_east, 'c-' , lw=3, label='fit')
+        ax.plot(dfFit.index, dfFit.fit_east, 'c-' , lw=3, label='Fit')
         ax1.plot(dfFit.index.values, dfFit.fit_north.values, 'c-', lw=3)
         ax2.plot(dfFit.index.values, dfFit.fit_up.values, 'c-', lw=3)
 
