@@ -26,19 +26,61 @@ ungl_data = os.environ['UNGL_DATA']
 # ---------------------------------------------------------
 #    Functions for Loading UNGL Data
 # ---------------------------------------------------------
-def load_stations(file=os.path.join(ungl_data,'llh')):
+def load_stations(file=os.path.join(ungl_data,'DataHoldings.txt'), station=None):
+    '''
+    Get station names and positions from UNGL file
+    '''
+    df = pd.read_csv(file,
+                #names=['site','lat','lon','height','sx','y','z','dtbeg','dtend','dtmod','nsol','origname'],
+                names=['site','lat','lon','height','start','end'],
+                usecols = [0,1,2,3,7,8],
+                skiprows=1,
+                parse_dates = ['start','end'],
+                delim_whitespace=True,
+                engine='python',
+                )
+    if station: #NOTE: would be more efficient to grep for specific line, and read only that
+        df = df[df.site == station]
+
+    return df
+
+def load_stations_old(file=os.path.join(ungl_data,'llh')):
     '''
     Get station names and positions from UNGL file
     '''
     df = pd.read_csv(file,
                  names=['site','lat','lon','height'],
-                 sep='  ',
+                 delim_whitespace=True,
                  engine='python',
                  )
     return df
 
 
-def load_steps(station=None):
+def load_steps(ungl_data, station):
+    '''Load Unevada shifts for give 4 character station name '''
+    os.system('grep {0} steps.txt > station_steps.txt'.format(station))
+    os.system("""awk -F" " '$3 == "1" { print $1,$2,$3,$4}' station_steps.txt > steps_code1.txt""")
+    os.system("""awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' station_steps.txt > steps_code2.txt""")
+
+    dateparse = lambda x: pd.datetime.strptime(x, '%y%b%d')
+    df1 = pd.read_csv(os.path.join(ungl_data,'steps_code1.txt'),
+                     names=['site', 'date', 'code', 'note'],
+                     delim_whitespace=True,
+                     parse_dates = ['date'],
+                     date_parser=dateparse,
+                     engine='python'
+                    )
+    df2 = pd.read_csv(os.path.join(ungl_data,'steps_code2.txt'),
+                     names=['site', 'date', 'code','thresh_d','distance','mag','id'],
+                     delim_whitespace=True,
+                     parse_dates = ['date'],
+                     date_parser=dateparse,
+                     engine='python'
+                    )
+    return df1,df2
+
+
+def load_steps_code2(station=None):
     '''Load Unevada shifts for give 4 character station name '''
     #NOTE: isloate just EQ-related steps:
     #awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' steps.txt > steps_code2.txt
@@ -169,21 +211,18 @@ def plot_all(df, dfSteps=None, dfMidas=None, dfFit=None,
     ax2.plot(df.index, df[columns[2]], 'k.', label='Z')
     #ax2.set_title('Z')
 
-    # Add midas velocities
+    # Add MIDAS velocities
     if isinstance(dfMidas, pd.DataFrame):
-        X = [decyear2date(dfMidas.start.iloc[0]), decyear2date(dfMidas.end.iloc[0])]
-        dt = dfMidas.years.values
+        dfM = add_midas(df, dfMidas)
+        ax.plot(dfM.index.values, dfM.midas_east.values, 'm-' , lw=2, label='MIDAS')
+        ax1.plot(dfM.index.values, dfM.midas_north.values, 'm-', lw=2 )
+        ax2.plot(dfM.index.values, dfM.midas_up.values, 'm-', lw=2 )
 
-        E0 = (df.east.iloc[0] + dfMidas.e0).values
-        N0 = (df.north.iloc[0] + dfMidas.n0).values
-        U0 = (df.up.iloc[0] + dfMidas.u0).values
-
-        E = [E0, E0 + dfMidas.east.values * dt] #dfMidas.e0.values not sure about this value
-        N = [N0, N0 + dfMidas.north.values * dt]
-        U = [U0,  U0 + dfMidas.up.values * dt]
-        ax.plot(X, E, 'm-' , lw=2, label='MIDAS')
-        ax1.plot(X, N, 'm-', lw=2 )
-        ax2.plot(X, U, 'm-', lw=2 )
+        # Show error bounds
+        # NOTE: what exatly are MIDAS error bounds? note 95% confidence limits...
+        #ax.fill_between(dfM.index.values, dfM.midas_east_lb.values, dfM.midas_east_ub.values, color='m', alpha=0.5)
+        #ax1.fill_between(dfM.index.values, dfM.midas_north_lb.values, dfM.midas_north_ub.values, color='m', alpha=0.5)
+        #ax2.fill_between(dfM.index.values, dfM.midas_up_lb.values, dfM.midas_up_ub.values, color='m', alpha=0.5)
 
     # Add discontinuities
     if isinstance(dfSteps, pd.DataFrame):
@@ -304,18 +343,43 @@ def add_midas(df, dfMidas):
     '''
     Add MIDAS estimates to dataframe
     '''
-    t = (df.decyear - df.decyear.iloc[0]).values
-    E0 = (df.east.iloc[0] + dfMidas.e0).values
-    N0 = (df.north.iloc[0] + dfMidas.n0).values
-    U0 = (df.up.iloc[0] + dfMidas.u0).values
+    start = decyear2date(dfMidas.start.iloc[0])
+    end = decyear2date(dfMidas.end.iloc[0])
+    t = df.ix[start:end, 'decyear'] - dfMidas.start.iloc[0]
 
-    E = E0 + (dfMidas.east.values * t)
-    N = N0 + (dfMidas.north.values * t)
-    U = U0 + (dfMidas.up.values * t)
+    E0 = df.ix[start,'east'] + dfMidas.e0.iloc[0]
+    N0 = df.ix[start,'north'] + dfMidas.n0.iloc[0]
+    U0 = df.ix[start,'up'] + dfMidas.u0.iloc[0]
 
-    df['midas_east'] = E
-    df['midas_north'] = N
-    df['midas_up'] = U
+    rate_east = dfMidas.east.iloc[0]
+    rate_north = dfMidas.north.iloc[0]
+    rate_up = dfMidas.up.iloc[0]
+    E = E0 + (rate_east * t)
+    N = N0 + (rate_north * t)
+    U = U0 + (rate_up * t)
+    df.ix[start:end,'midas_east'] = E
+    df.ix[start:end, 'midas_north'] = N
+    df.ix[start:end, 'midas_up'] = U
+
+    rate_east = dfMidas.east.iloc[0] + dfMidas.err_e.iloc[0]
+    rate_north = dfMidas.north.iloc[0] + dfMidas.err_n.iloc[0]
+    rate_up = dfMidas.up.iloc[0] + dfMidas.err_u.iloc[0]
+    E = E0 + (rate_east * t)
+    N = N0 + (rate_north * t)
+    U = U0 + (rate_up * t)
+    df.ix[start:end,'midas_east_ub'] = E
+    df.ix[start:end, 'midas_north_ub'] = N
+    df.ix[start:end, 'midas_up_ub'] = U
+
+    rate_east = dfMidas.east.iloc[0] - dfMidas.err_e.iloc[0]
+    rate_north = dfMidas.north.iloc[0] - dfMidas.err_n.iloc[0]
+    rate_up = dfMidas.up.iloc[0] - dfMidas.err_u.iloc[0]
+    E = E0 + (rate_east * t)
+    N = N0 + (rate_north * t)
+    U = U0 + (rate_up * t)
+    df.ix[start:end,'midas_east_lb'] = E
+    df.ix[start:end, 'midas_north_lb'] = N
+    df.ix[start:end, 'midas_up_lb'] = U
 
     return df
 
@@ -387,7 +451,7 @@ def fit_linear(df, cols=['up','east','north']):
         model = sm.OLS(y, X)
         est = model.fit()
         rate = est.params[1]*3.1536e10
-        df[col+'_fit'] = est.predict(X)
+        df['fit_'+col] = est.predict(X)
 
     # Add 95% confidence interval for regression
     #http://markthegraph.blogspot.com.co/2015/05/using-python-statsmodels-for-ols-linear.html
@@ -484,6 +548,27 @@ def remove_eq2(df, eq, dt=120, showplot=False):
 
     return du, de, dn
 
+def invert_osu(x, y, tj, guess):
+    '''
+    Invert OSU, fixing many parameters:
+    t0, tj, T1, T2
+    '''
+    #osu(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2)
+    #guess = [t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2]
+    t0 = x[0]
+    tj = tj
+    T1 = 1
+    T2 = 0.5
+    wrapper = lambda t,x0,v,b,s1,c1,s2,c2: osu(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2)
+    popt, pcov = curve_fit(wrapper, x, y, guess)
+    #print('Parameter stdev estimates from covariance:\nx0,v,b,s1,c1,s2,c2')
+    #print(np.sqrt(np.diag(pcov))) #NOTE: seem too small...
+    result = wrapper(x, *popt)
+    residuals = y - result
+    rmse = np.sqrt((np.sum(residuals**2) / residuals.size))
+
+    return result, popt, rmse
+
 
 def myfit(x, y, F, guess, printresult=False):
     '''
@@ -492,7 +577,6 @@ def myfit(x, y, F, guess, printresult=False):
     '''
     popt, pcov = curve_fit(F, x, y, guess)
     result = F(x, *popt)
-
     residuals = y - result
     rmse = np.sqrt((np.sum(residuals**2) / residuals.size))
 
@@ -535,8 +619,32 @@ def heaviside(t):
     ''' Heavidside step function'''
     return 0.5 * (np.sign(t) + 1)
 
+
 def osu(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
     '''
+    Preferred general model for OSU processing (See Bevis 2014 eq 5)
+    fix t0 and tj in lambda function in myfit()
+    #http://www.mathworks.com/matlabcentral/fileexchange/27783-fitting-data-with-a-sudden-discontinuity/content/html/exampleShift.html
+    2 frequencies = 4 fourier series parameters sn, cn)
+    # T1=365.25,T2=182.625
+    '''
+    w1 = (2 * np.pi) / T1
+    w2 = (2 * np.pi) / T2
+    t = t - t0
+    tj = tj - t0
+    f = ( x0 +
+          v * t +
+          b * heaviside(t-tj) +
+          s1 * np.sin(w1*t) + c1 * np.cos(w1*t) + #)#
+          s2 * np.sin(w2*t) + c2 * np.cos(w2*t) )
+
+    return f
+
+
+
+def osu_bak(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
+    '''
+    NOTE: as written, allows t0 and tj to vary... but we want to fix them!
     Preferred general model for OSU processing (See Bevis 2014 eq 5)
     #http://www.mathworks.com/matlabcentral/fileexchange/27783-fitting-data-with-a-sudden-discontinuity/content/html/exampleShift.html
     2 frequencies = 4 fourier series parameters sn, cn)
@@ -544,10 +652,15 @@ def osu(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
     '''
     w1 = (2 * np.pi) / T1
     w2 = (2 * np.pi) / T2
-
     t = t - t0
     tj = tj - t0
+    f = ( x0 +
+          v * t +
+          b * heaviside(t-tj) +
+          s1 * np.sin(w1*t) + c1 * np.cos(w1*t) + #)#
+          s2 * np.sin(w2*t) + c2 * np.cos(w2*t) )
 
+    return f
     '''
     d2s = 86400
     y2s = 31557600
@@ -563,13 +676,6 @@ def osu(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
     #for step in tj:
     #    b*heaviside(t-tj)
 
-    f = ( x0 +
-          v * t +
-          b * heaviside(t-tj) +
-          s1 * np.sin(w1*t) + c1 * np.cos(w1*t) + #)#
-          s2 * np.sin(w2*t) + c2 * np.cos(w2*t) )
-
-    return f
 
 def scott(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
     '''
