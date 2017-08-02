@@ -34,7 +34,6 @@ def load_stations(file=os.path.join(ungl_data,'DataHoldings.txt'), station=None)
                 skiprows=1,
                 parse_dates = ['start','end'],
                 delim_whitespace=True,
-                engine='python',
                 )
     if station: #NOTE: would be more efficient to grep for specific line, and read only that
         df = df[df.site == station]
@@ -48,14 +47,15 @@ def load_stations_old(file=os.path.join(ungl_data,'llh')):
     df = pd.read_csv(file,
                  names=['site','lat','lon','height'],
                  delim_whitespace=True,
-                 engine='python',
                  )
     return df
 
 
-def load_steps(ungl_data, station):
+def load_steps(station):
     '''Load Unevada shifts for give 4 character station name '''
-    os.system('grep {0} steps.txt > station_steps.txt'.format(station))
+    pwd = os.getcwd()
+    os.chdir(ungl_data)
+    os.system('grep --color=never {0} steps.txt > station_steps.txt'.format(station))
     os.system("""awk -F" " '$3 == "1" { print $1,$2,$3,$4}' station_steps.txt > steps_code1.txt""")
     os.system("""awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' station_steps.txt > steps_code2.txt""")
 
@@ -65,15 +65,15 @@ def load_steps(ungl_data, station):
                      delim_whitespace=True,
                      parse_dates = ['date'],
                      date_parser=dateparse,
-                     engine='python'
                     )
     df2 = pd.read_csv(os.path.join(ungl_data,'steps_code2.txt'),
                      names=['site', 'date', 'code','thresh_d','distance','mag','id'],
                      delim_whitespace=True,
                      parse_dates = ['date'],
                      date_parser=dateparse,
-                     engine='python'
                     )
+    os.chdir(pwd)
+
     return df1,df2
 
 
@@ -83,8 +83,7 @@ def load_steps_code2(station=None):
     #awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' steps.txt > steps_code2.txt
     df = pd.read_csv(os.path.join(ungl_data,'steps_code2.txt'),
                      names=['site', 'date', 'code','thresh_d','distance','mag','id'],
-                     sep=r"\s*",
-                     engine='python'
+                     delim_whitespace=True,
                     )
 
     #df.set_index('date')
@@ -96,7 +95,7 @@ def load_steps_code2(station=None):
     return df
 
 
-def load_midas(station=None):
+def load_midas(station=None, refframe='IGS08'):
     '''
     Midas is automatic UNevada GPS velocity solution
 
@@ -107,13 +106,12 @@ def load_midas(station=None):
     (See http://geodesy.unr.edu/NGLStationPages/decyr.txt for translation to YYMMMDD format)
     '''
     #!grep {station} /Volumes/OptiHDD/data/GPS/unevada/midas.IGS08.txt > midas.IGS08.station.txt  #just 1 station
-    df = pd.read_csv(os.path.join(ungl_data,'midas.IGS08.txt'),
+    df = pd.read_csv(os.path.join(ungl_data,'midas.{}.txt'.format(refframe)),
                      header=None,
                      names=['site', 'version', 'start', 'end', 'years', 'epochs', 'epochs_good', 'pairs',
                         'east', 'north', 'up', 'err_e', 'err_n', 'err_u', 'e0', 'n0', 'u0',
                         'out_e', 'out_n', 'out_u', 'sig_e', 'sig_n', 'sig_u', 'nsteps'],
-                     sep=r"\s*",
-                     engine='python',
+                     delim_whitespace=True,
                     )
 
     #df.set_index('date')
@@ -124,9 +122,13 @@ def load_midas(station=None):
     return df
 
 
-def download_data(station, overwrite=False, url='http://geodesy.unr.edu/gps_timeseries/tenv3/IGS08'):
+def download_data(station,
+                    refframe, # 'IGS08' or 'NA12'
+                    overwrite=False,
+                    outdir='./',
+                    url='http://geodesy.unr.edu/gps_timeseries/tenv3/'):
     procede = True
-    localfile = station + '.IGS08.tenv3'
+    localfile = os.path.join(outdir, '{}.{}.tenv3'.format(station,refframe))
     if os.path.exists(localfile):
         if overwrite:
             print('Overwriting ' + station)
@@ -135,11 +137,11 @@ def download_data(station, overwrite=False, url='http://geodesy.unr.edu/gps_time
             procede = False
 
     if procede:
-        url = '{}/{}.IGS08.tenv3'.format(url, station)
+        url = '{0}/{1}/{2}.{1}.tenv3'.format(url, refframe, station)
         print('Downloading {} ...'.format(url))
-        savefile = os.path.basename(url)
+        #savefile = os.path.basename(url)
         try:
-            localfile, result = urllib.request.urlretrieve(url, savefile)
+            localfile, result = urllib.request.urlretrieve(url, localfile)
         except Exception as e:
             print(station, e)
             return None
@@ -156,8 +158,7 @@ def load_tenv3(envfile):
                      names=['site', 'date', 'decyear', 'mjd', 'week', 'day',
                         'reflon', 'e0', 'east', 'n0', 'north', 'u0', 'up', 'ant',
                         'sig_e', 'sig_n', 'sig_u', 'corr_en', 'corr_eu', 'corr_nu'],
-                     sep=r"\s*",
-                     engine='python',
+                     delim_whitespace=True,
                     )
 
     #df.set_index('date')

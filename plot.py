@@ -11,8 +11,7 @@ import matplotlib.dates as pltdate
 # ---------------------------------------------------------
 #    Plotting Functions
 # ---------------------------------------------------------
-def components(df, dfSteps=None, dfMidas=None, dfFit=None,
-             columns=['east', 'north','up'], axhline=False, title=''):
+def components(df, columns=['east', 'north','up'], axhline=False, title=''):
     #Plot daily positions
     fig, (ax,ax1,ax2) =  plt.subplots(3,1,sharex=True,figsize=(8.5,11))
     ax.plot(df.index, df[columns[0]], 'k.', label='EW')
