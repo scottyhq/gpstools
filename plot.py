@@ -53,10 +53,10 @@ def all(df, dfSteps=None, dfMidas=None, dfFit=None,
 
     # Add MIDAS velocities
     if isinstance(dfMidas, pd.DataFrame):
-        dfM = add_midas(df, dfMidas)
-        ax.plot(dfM.index.values, dfM.midas_east.values, 'm-' , lw=2, label='MIDAS')
-        ax1.plot(dfM.index.values, dfM.midas_north.values, 'm-', lw=2 )
-        ax2.plot(dfM.index.values, dfM.midas_up.values, 'm-', lw=2 )
+        #dfM = add_midas(df, dfMidas)
+        ax.plot(dfMidas.index.values, dfMidas.midas_east.values, 'm-' , lw=2, label='MIDAS')
+        ax1.plot(dfMidas.index.values, dfMidas.midas_north.values, 'm-', lw=2 )
+        ax2.plot(dfMidas.index.values, dfMidas.midas_up.values, 'm-', lw=2 )
 
         # Show error bounds
         # NOTE: what exatly are MIDAS error bounds? note 95% confidence limits...

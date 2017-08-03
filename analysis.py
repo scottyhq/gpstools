@@ -10,7 +10,7 @@ import statsmodels.api as sm
 from scipy.optimize import curve_fit
 from scipy.signal import sawtooth
 from scipy import stats
-
+import numpy as np
 
 
 
@@ -50,7 +50,7 @@ def do_detrend(df, col='up', start=0, end=-1):
     remove linear trend from GPS data, note start and end either need to be integers or dates/timestamps
     '''
     #between range of dates
-    df = df.ix[start:end]
+    df = df.loc[start:end]
 
     df['ints'] = df.index.asi8
     df['elapsed_s'] = (df.ints - df.ints[0])/1e9 #sec
