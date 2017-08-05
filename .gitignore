@@ -1,4 +1,5 @@
 *.bak
-
+./panga/data/
+./ungl/data/
 .ipynb_checkpoints/
 __pycache__
