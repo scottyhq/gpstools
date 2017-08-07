@@ -22,10 +22,30 @@ import urllib
 import pandas as pd
 import datetime as DT
 
+
+panga_dir = os.path.abspath('./panga')
+panga_data = os.path.abspath('./panga/data')
+
+def load_stations(file=os.path.join(panga_dir,'sites.csv'), station=None):
+    '''
+    Get station names and positions from UNGL file
+    '''
+    df = pd.read_csv(file,
+                names=['site','description','lat','lon','height','start','end'],
+                skiprows=1,
+                #parse_dates = ['start','end'],
+                )
+    #NOTE: would be more efficient to grep for specific line, and read only that
+    if station:
+        df = df[df.site == station]
+
+    return df
+
+
 def download_data(station,
                 product='raw',
                 overwrite=False,
-                outdir='./',
+                outdir=os.path.join(panga_dir, 'data'),
                 baseurl='http://www.geodesy.org/panga/timeseries_data.php'):
     procede = True
     names = dict(lon='e', lat='n', rad='u')
@@ -73,12 +93,12 @@ def datetime2decyear(adatetime):
     return year + ((adatetime - boy).total_seconds() / ((eoy - boy).total_seconds()))
 
 
-def load_panga_fit_info(filename, datadir='./'):
+def load_panga_fit_info(filepath):
     ''' parse panga processing fit data from header
     (only lines starting with #)
     '''
     from itertools import takewhile
-    with open(filename, 'r') as fobj:
+    with open(filepath, 'r') as fobj:
         headiter = takewhile(lambda s: s.startswith('#'), fobj)
         header = list(headiter)
 
@@ -86,7 +106,7 @@ def load_panga_fit_info(filename, datadir='./'):
     return metadata
 
 
-def load_panga(site, datadir='./'):
+def load_panga(site):
     '''Load GPS timeseries into pandas dataframe with timestamps as index '''
     #http://www.geodesy.cwu.edu/data/bysite/   'east', 'n0', 'north', 'u0', 'up'
     def load_csv(path):
@@ -97,13 +117,13 @@ def load_panga(site, datadir='./'):
                          delim_whitespace=True,
                         )
         return tmp
-    df = load_csv(os.path.join(datadir, '{}e.csv'.format(site)))
+    df = load_csv(os.path.join(panga_data, '{}e.csv'.format(site)))
     df.columns = ['decyear', 'east', 'err_e'] #'north', 'up', 'err_e', 'err_n', 'err_u'
 
-    tmp = load_csv(os.path.join(datadir, '{}n.csv'.format(site)))
+    tmp = load_csv(os.path.join(panga_data, '{}n.csv'.format(site)))
     df[ ['north','err_n']]= tmp[ ['comp','error']]
 
-    tmp = load_csv(os.path.join(datadir, '{}u.csv'.format(site)))
+    tmp = load_csv(os.path.join(panga_data, '{}u.csv'.format(site)))
     df[ ['up','err_u']]= tmp[ ['comp','error']]
 
     #df['just_date'] = df['dates'].dt.date # Get rid of hours, minutes, seconds

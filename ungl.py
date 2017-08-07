@@ -17,13 +17,14 @@ from scipy.optimize import curve_fit
 from scipy.signal import sawtooth
 from scipy import stats
 
-# Need to set this environment variable for each computer
-ungl_data = os.environ['UNGL_DATA']
+# Path relative to gpstools parent directory
+ungl_dir = os.path.abspath('./ungl')
+ungl_data = os.path.abspath('./ungl/data')
 
 # ---------------------------------------------------------
 #    Functions for Loading UNGL Data
 # ---------------------------------------------------------
-def load_stations(file=os.path.join(ungl_data,'DataHoldings.txt'), station=None):
+def load_stations(file=os.path.join(ungl_dir,'DataHoldings.txt'), station=None):
     '''
     Get station names and positions from UNGL file
     '''
@@ -40,7 +41,7 @@ def load_stations(file=os.path.join(ungl_data,'DataHoldings.txt'), station=None)
 
     return df
 
-def load_stations_old(file=os.path.join(ungl_data,'llh')):
+def load_stations_old(file=os.path.join(ungl_dir,'llh')):
     '''
     Get station names and positions from UNGL file
     '''
@@ -54,19 +55,19 @@ def load_stations_old(file=os.path.join(ungl_data,'llh')):
 def load_steps(station):
     '''Load Unevada shifts for give 4 character station name '''
     pwd = os.getcwd()
-    os.chdir(ungl_data)
+    os.chdir(ungl_dir)
     os.system('grep --color=never {0} steps.txt > station_steps.txt'.format(station))
     os.system("""awk -F" " '$3 == "1" { print $1,$2,$3,$4}' station_steps.txt > steps_code1.txt""")
     os.system("""awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' station_steps.txt > steps_code2.txt""")
 
     dateparse = lambda x: pd.datetime.strptime(x, '%y%b%d')
-    df1 = pd.read_csv(os.path.join(ungl_data,'steps_code1.txt'),
+    df1 = pd.read_csv(os.path.join(ungl_dir,'steps_code1.txt'),
                      names=['site', 'date', 'code', 'note'],
                      delim_whitespace=True,
                      parse_dates = ['date'],
                      date_parser=dateparse,
                     )
-    df2 = pd.read_csv(os.path.join(ungl_data,'steps_code2.txt'),
+    df2 = pd.read_csv(os.path.join(ungl_dir,'steps_code2.txt'),
                      names=['site', 'date', 'code','thresh_d','distance','mag','id'],
                      delim_whitespace=True,
                      parse_dates = ['date'],
@@ -81,7 +82,7 @@ def load_steps_code2(station=None):
     '''Load Unevada shifts for give 4 character station name '''
     #NOTE: isloate just EQ-related steps:
     #awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' steps.txt > steps_code2.txt
-    df = pd.read_csv(os.path.join(ungl_data,'steps_code2.txt'),
+    df = pd.read_csv(os.path.join(ungl_dir,'steps_code2.txt'),
                      names=['site', 'date', 'code','thresh_d','distance','mag','id'],
                      delim_whitespace=True,
                     )
@@ -106,13 +107,17 @@ def load_midas(station=None, refframe='IGS08'):
     (See http://geodesy.unr.edu/NGLStationPages/decyr.txt for translation to YYMMMDD format)
     '''
     #!grep {station} /Volumes/OptiHDD/data/GPS/unevada/midas.IGS08.txt > midas.IGS08.station.txt  #just 1 station
-    df = pd.read_csv(os.path.join(ungl_data,'midas.{}.txt'.format(refframe)),
+    df = pd.read_csv(os.path.join(ungl_dir,'midas.{}.txt'.format(refframe)),
                      header=None,
                      names=['site', 'version', 'start', 'end', 'years', 'epochs', 'epochs_good', 'pairs',
                         'east', 'north', 'up', 'err_e', 'err_n', 'err_u', 'e0', 'n0', 'u0',
                         'out_e', 'out_n', 'out_u', 'sig_e', 'sig_n', 'sig_u', 'nsteps'],
                      delim_whitespace=True,
                     )
+
+    # Convert units from [m] to [mm]
+    convert = ['e0', 'n0', 'u0','east','north','up','sig_e','sig_n','sig_u','err_e','err_n','err_u']
+    df[convert] = df[convert]*1e3
 
     #df.set_index('date')
     #df.index = pd.to_datetime(df.date, format='%y%b%d')
@@ -125,7 +130,7 @@ def load_midas(station=None, refframe='IGS08'):
 def download_data(station,
                     refframe, # 'IGS08' or 'NA12'
                     overwrite=False,
-                    outdir='./',
+                    outdir=ungl_data,
                     url='http://geodesy.unr.edu/gps_timeseries/tenv3/'):
     procede = True
     localfile = os.path.join(outdir, '{}.{}.tenv3'.format(station,refframe))
@@ -161,6 +166,10 @@ def load_tenv3(envfile):
                      delim_whitespace=True,
                     )
 
+    # Convert units from [m] to [mm]
+    convert = ['east','north','up','sig_e','sig_n','sig_u','corr_en','corr_eu','corr_nu']
+    df[convert] = df[convert]*1e3
+
     #df.set_index('date')
     df.index = pd.to_datetime(df.date, format='%y%b%d')
 
@@ -178,7 +187,7 @@ def decyear2date(decyear, inverse=False):
     Out[1]: 1990.0014000000001
 
     '''
-    df = pd.read_csv(os.path.join(ungl_data,'decyr.txt'),
+    df = pd.read_csv(os.path.join(ungl_dir,'decyr.txt'),
                      names=['date','decyear'],
                      sep=' ',
                      )
