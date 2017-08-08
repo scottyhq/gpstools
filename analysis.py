@@ -50,7 +50,10 @@ def do_detrend(df, col='up', start=0, end=-1):
     remove linear trend from GPS data, note start and end either need to be integers or dates/timestamps
     '''
     #between range of dates
-    df = df.loc[start:end]
+    if type(start) is 'int':
+        df = df.iloc[start:end]
+    else:
+        df = df.iloc[start:end]
 
     df['ints'] = df.index.asi8
     df['elapsed_s'] = (df.ints - df.ints[0])/1e9 #sec

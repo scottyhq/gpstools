@@ -106,6 +106,7 @@ def load_panga_fit_info(filepath):
     return metadata
 
 
+
 def load_panga(site):
     '''Load GPS timeseries into pandas dataframe with timestamps as index '''
     #http://www.geodesy.cwu.edu/data/bysite/   'east', 'n0', 'north', 'u0', 'up'
@@ -132,5 +133,11 @@ def load_panga(site):
     #https://github.com/pandas-dev/pandas/issues/8845
     df['date'] = pd.to_datetime(df.decyear.apply(decyear2datetime).dt.date)
     df.set_index('date', inplace=True)
+
+    #NOTE: occaisionally Panga has decimal year values falling on same days
+    #pandas requires unique index values, so remove the duplicates
+    # This takes mean of duplicate dates and fills in missing dates with NaN
+    df = df.resample('D').mean()
+
 
     return df
