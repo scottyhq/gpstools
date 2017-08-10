@@ -6,12 +6,38 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as pltdate
 
-
+#from . import ungl
 
 # ---------------------------------------------------------
 #    Plotting Functions
 # ---------------------------------------------------------
 def components(df, columns=['east', 'north','up'], axhline=False, title=''):
+    #Plot daily positions
+    fig, (ax,ax1,ax2) =  plt.subplots(3,1,sharex=True,figsize=(8.5,11))
+    ax.plot(df.index, df[columns[0]], 'k.', label='EW')
+    #ax.set_title('NS')
+
+    ax1.plot(df.index, df[columns[1]], 'k.', label='NS')
+    #ax1.set_title('EW')
+
+    ax2.plot(df.index, df[columns[2]], 'k.', label='Z')
+
+    ax.legend(loc='upper left',frameon=True)
+    ax1.legend(loc='upper left',frameon=True)
+    ax2.legend(loc='upper left',frameon=True)
+    plt.suptitle(title, fontsize=16)
+    ax1.set_ylabel('Position [m]')
+
+    months = pltdate.MonthLocator()
+    years = pltdate.YearLocator()
+    for axes in (ax,ax1,ax2):
+        axes.xaxis.set_major_locator(years)
+        axes.xaxis.set_minor_locator(months) #too much
+        axes.fmt_xdata = pltdate.DateFormatter('%Y-%m-%d')
+        axes.grid(True)
+
+
+def compare_component(sites, component, axhline=False, title=''):
     #Plot daily positions
     fig, (ax,ax1,ax2) =  plt.subplots(3,1,sharex=True,figsize=(8.5,11))
     ax.plot(df.index, df[columns[0]], 'k.', label='EW')

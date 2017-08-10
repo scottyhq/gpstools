@@ -8,7 +8,7 @@ __author__ = 'scottyh@uw.edu'
 __lastupdate__ = '07/2017'
 
 #from . import io
-from . import ungl,panga
+from . import ungl,panga,jpl,sopac
 from . import plot
 from . import analysis
 from . import ungl
