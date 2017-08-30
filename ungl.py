@@ -36,6 +36,9 @@ def load_stations(file=os.path.join(ungl_dir,'DataHoldings.txt'), station=None):
                 parse_dates = ['start','end'],
                 delim_whitespace=True,
                 )
+    # convert longitude from (0 to 360) to (-180 to 180)
+    df['lon'] = np.where(df.lon > 180.0, df.lon - 360, df.lon)
+
     if station: #NOTE: would be more efficient to grep for specific line, and read only that
         df = df[df.site == station]
 

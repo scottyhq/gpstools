@@ -63,7 +63,7 @@ def do_detrend(df, col='up', start=0, end=-1):
     X = sm.add_constant(X)  # Adds a constant term to the predictor
     model = sm.OLS(y, X)
     est = model.fit()
-    rate = est.params[1]*3.1536e10
+    rate = est.params[1]*3.1536e7
     print('{} Rate [mm/yr]={}'.format(col, rate))
     #print(est.summary()) # Big stats-rich summary!
 
@@ -87,7 +87,7 @@ def detrend(df, col='up'):
     X = sm.add_constant(X)  # Adds a constant term to the predictor
     model = sm.OLS(y, X)
     est = model.fit()
-    rate = est.params[1]*3.1536e10
+    rate = est.params[1]*3.1536e7
     print('Rate [mm/yr]={}'.format(rate))
     #print(est.summary()) # Big stats-rich summary!
     df['linear_fit'] = est.predict(X)
@@ -113,7 +113,7 @@ def fit_linear(df, cols=['up','east','north']):
         X = sm.add_constant(X)  # Adds a constant term to the predictor
         model = sm.OLS(y, X)
         est = model.fit()
-        rate = est.params[1]*3.1536e10
+        rate = est.params[1]*3.1536e7
         df['fit_'+col] = est.predict(X)
 
     # Add 95% confidence interval for regression

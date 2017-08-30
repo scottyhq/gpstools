@@ -29,3 +29,8 @@ def load_timeseries(site):
     df.index = pd.to_datetime(df[['year','month','day']])
 
     return df
+
+
+def download_timeseres(site):
+    ''' ftp://sideshow.jpl.nasa.gov/pub/usrs/mbh/point/ '''
+    print('todo')

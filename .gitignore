@@ -1,5 +1,8 @@
+panga/data/*
+ungl/data/*
+jpl/data/*
+
 *.bak
-./panga/data/
-./ungl/data/
+.DS_Store
 .ipynb_checkpoints/
 __pycache__

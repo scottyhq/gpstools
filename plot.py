@@ -11,6 +11,17 @@ import matplotlib.dates as pltdate
 # ---------------------------------------------------------
 #    Plotting Functions
 # ---------------------------------------------------------
+def interseismic():
+    ''' Basemap with intereseismic velocities '''
+    # Use Cartopy 
+
+
+def vectors(dfAlignEast, dfAlignNorth, span1, span2):
+    ''' Given an aligned DateIndex dataframe and two temporal spans, calculate
+    the average position for each span and plot the difference as a vector '''
+
+
+
 def components(df, columns=['east', 'north','up'], axhline=False, title=''):
     #Plot daily positions
     fig, (ax,ax1,ax2) =  plt.subplots(3,1,sharex=True,figsize=(8.5,11))

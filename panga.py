@@ -53,15 +53,12 @@ def download_data(station,
         query='?n=panga&s={}&p={}&f=daily&c={}'.format(station,product,key)
         localfile = os.path.join(outdir, '{}{}.csv'.format(station,val))
         if os.path.exists(localfile):
-            if overwrite:
-                print('Overwriting ' + localfile)
-            else:
-                print(localfile + ' already dowloaded... skipping')
+            if not overwrite:
                 procede = False
 
         if procede:
             url = '{0}/{1}'.format(baseurl, query)
-            print('Downloading {} ...'.format(url))
+            #print('Downloading {} ...'.format(url))
             #savefile = os.path.basename(url)
             try:
                 localfile, result = urllib.request.urlretrieve(url, localfile)
@@ -118,7 +115,12 @@ def load_panga(site):
                          delim_whitespace=True,
                         )
         return tmp
+
     df = load_csv(os.path.join(panga_data, '{}e.csv'.format(site)))
+    if df.decyear[0] == '<pre>':
+        print('No timeseries data for {}'.format(site))
+        return
+
     df.columns = ['decyear', 'east', 'err_e'] #'north', 'up', 'err_e', 'err_n', 'err_u'
 
     tmp = load_csv(os.path.join(panga_data, '{}n.csv'.format(site)))
