@@ -5,14 +5,13 @@ Functions for working with JPL GPS time series
 import os
 import pandas as pd
 
-
-
-jpl_dir = os.path.abspath('./jpl')
-jpl_data = os.path.abspath('./jpl/data')
+from pathlib import Path
+datadir = os.path.join(Path(__file__).parent.parent, 'data/jpl')
+auxdir = os.path.join(Path(__file__).parent.parent, 'auxfiles/jpl')
 
 def load_timeseries(site):
     ''' julsec = time in seconds past J2000 '''
-    df = pd.read_csv(os.path.join(jpl_data, site + '.series'),
+    df = pd.read_csv(os.path.join(datadir, site + '.series'),
                         header=None,
                         names=['decyear','east','north','up',
                         'sig_e', 'sig_n', 'sig_u',

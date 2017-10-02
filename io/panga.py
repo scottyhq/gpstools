@@ -22,11 +22,13 @@ import urllib
 import pandas as pd
 import datetime as DT
 
+from pathlib import Path
+datadir = os.path.join(Path(__file__).parent.parent, 'data/panga')
+auxdir = os.path.join(Path(__file__).parent.parent, 'auxfiles/panga')
 
-panga_dir = os.path.abspath('./panga')
-panga_data = os.path.abspath('./panga/data')
 
-def load_stations(file=os.path.join(panga_dir,'sites.csv'), station=None):
+
+def load_stations(file=os.path.join(auxdir,'sites.csv'), station=None):
     '''
     Get station names and positions from UNGL file
     '''
@@ -45,7 +47,7 @@ def load_stations(file=os.path.join(panga_dir,'sites.csv'), station=None):
 def download_data(station,
                 product='raw',
                 overwrite=False,
-                outdir=os.path.join(panga_dir, 'data'),
+                outdir=datadir,
                 baseurl='http://www.geodesy.org/panga/timeseries_data.php'):
     procede = True
     names = dict(lon='e', lat='n', rad='u')
@@ -58,7 +60,7 @@ def download_data(station,
 
         if procede:
             url = '{0}/{1}'.format(baseurl, query)
-            #print('Downloading {} ...'.format(url))
+            print('Downloading {} ...'.format(url))
             #savefile = os.path.basename(url)
             try:
                 localfile, result = urllib.request.urlretrieve(url, localfile)
@@ -116,17 +118,17 @@ def load_panga(site):
                         )
         return tmp
 
-    df = load_csv(os.path.join(panga_data, '{}e.csv'.format(site)))
+    df = load_csv(os.path.join(datadir, '{}e.csv'.format(site)))
     if df.decyear[0] == '<pre>':
         print('No timeseries data for {}'.format(site))
         return
 
     df.columns = ['decyear', 'east', 'err_e'] #'north', 'up', 'err_e', 'err_n', 'err_u'
 
-    tmp = load_csv(os.path.join(panga_data, '{}n.csv'.format(site)))
+    tmp = load_csv(os.path.join(datadir, '{}n.csv'.format(site)))
     df[ ['north','err_n']]= tmp[ ['comp','error']]
 
-    tmp = load_csv(os.path.join(panga_data, '{}u.csv'.format(site)))
+    tmp = load_csv(os.path.join(datadir, '{}u.csv'.format(site)))
     df[ ['up','err_u']]= tmp[ ['comp','error']]
 
     #df['just_date'] = df['dates'].dt.date # Get rid of hours, minutes, seconds

@@ -1,6 +1,4 @@
-panga/data/*
-ungl/data/*
-jpl/data/*
+data/*
 
 *.bak
 .DS_Store
