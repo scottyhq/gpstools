@@ -263,7 +263,8 @@ def remove_eq2(df, eq, dt=120, showplot=False):
     return du, de, dn
 
 
-def invert_osu(x, y, tj, guess):
+
+def invert_osu_knownEQ(x, y, tj, guess):
     '''
     Invert OSU, fixing many parameters:
     t0, tj, T1, T2
@@ -279,6 +280,40 @@ def invert_osu(x, y, tj, guess):
     #print('Parameter stdev estimates from covariance:\nx0,v,b,s1,c1,s2,c2')
     #print(np.sqrt(np.diag(pcov))) #NOTE: seem too small...
     result = wrapper(x, *popt)
+    residuals = y - result
+    rmse = np.sqrt((np.sum(residuals**2) / residuals.size))
+
+    return result, popt, rmse
+
+
+def invert_osu_nojumps(x, y, guess):
+    '''
+    Invert OSU, fixing many parameters:
+    t0, tj, T1, T2
+    '''
+    t0 = x[0]
+    b = 0
+    tj = t0
+    T1 = 1
+    T2 = 0.5
+    wrapper = lambda t,x0,v,s1,c1,s2,c2: osu(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2)
+    popt, pcov = curve_fit(wrapper, x, y, guess)
+    #print('Parameter stdev estimates from covariance:\nx0,v,b,s1,c1,s2,c2')
+    #print(np.sqrt(np.diag(pcov))) #NOTE: seem too small...
+    result = wrapper(x, *popt)
+    residuals = y - result
+    rmse = np.sqrt((np.sum(residuals**2) / residuals.size))
+
+    return result, popt, pcov, rmse
+
+
+def invert_osu(x, y, guess):
+    '''
+    Invert OSU model, completely unconstrained.
+    NOTE: tends to cause RuntimeError: Optimal parameters not found: Number of calls to function has reached maxfev
+    '''
+    popt, pcov = curve_fit(osu, x, y, guess)
+    result = osu(x, *popt)
     residuals = y - result
     rmse = np.sqrt((np.sum(residuals**2) / residuals.size))
 
@@ -350,16 +385,14 @@ def osu(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
     f = ( x0 +
           v * t +
           b * heaviside(t-tj) +
-          s1 * np.sin(w1*t) + c1 * np.cos(w1*t) + #)#
+          s1 * np.sin(w1*t) + c1 * np.cos(w1*t) +
           s2 * np.sin(w2*t) + c2 * np.cos(w2*t) )
 
     return f
 
 
-
-def osu_bak(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
+def osu_sawfunc(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
     '''
-    NOTE: as written, allows t0 and tj to vary... but we want to fix them!
     Preferred general model for OSU processing (See Bevis 2014 eq 5)
     #http://www.mathworks.com/matlabcentral/fileexchange/27783-fitting-data-with-a-sudden-discontinuity/content/html/exampleShift.html
     2 frequencies = 4 fourier series parameters sn, cn)
@@ -369,56 +402,6 @@ def osu_bak(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
     w2 = (2 * np.pi) / T2
     t = t - t0
     tj = tj - t0
-    f = ( x0 +
-          v * t +
-          b * heaviside(t-tj) +
-          s1 * np.sin(w1*t) + c1 * np.cos(w1*t) + #)#
-          s2 * np.sin(w2*t) + c2 * np.cos(w2*t) )
-
-    return f
-    '''
-    d2s = 86400
-    y2s = 31557600
-    #convert from decyear to seconds
-    t = (t-t0) * y2s
-    tj = (tj-t0) * y2s
-    w1 = w1 / d2s
-    w2 = w2 / d2s
-    '''
-
-    # How to fit n heaviside step functions to data?
-    #bj = [] #need to solve for B
-    #for step in tj:
-    #    b*heaviside(t-tj)
-
-
-def scott(t,t0,x0,v,b,tj,s1,c1,s2,c2,T1,T2):
-    '''
-    Preferred general model for OSU processing (See Bevis 2014 eq 5)
-    #http://www.mathworks.com/matlabcentral/fileexchange/27783-fitting-data-with-a-sudden-discontinuity/content/html/exampleShift.html
-    2 frequencies = 4 fourier series parameters sn, cn)
-    # T1=365.25,T2=182.625
-    '''
-    w1 = (2 * np.pi) / T1
-    w2 = (2 * np.pi) / T2
-
-    t = t - t0
-    tj = tj - t0
-
-    '''
-    d2s = 86400
-    y2s = 31557600
-    #convert from decyear to seconds
-    t = (t-t0) * y2s
-    tj = (tj-t0) * y2s
-    w1 = w1 / d2s
-    w2 = w2 / d2s
-    '''
-
-    # How to fit n heaviside step functions to data?
-    #bj = [] #need to solve for B
-    #for step in tj:
-    #    b*heaviside(t-tj)
 
     f = ( x0 +
           v * t +
