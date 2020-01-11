@@ -29,7 +29,9 @@ jobs:
           version: 1.0.0
 
       - name: Configure Poetry
-        run: poetry config settings.virtualenvs.path ~/.virtualenvs
+        run: | 
+         poetry config virtualenvs.path ~/.virtualenvs
+         poetry config list
 
       - name: Install Python Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
