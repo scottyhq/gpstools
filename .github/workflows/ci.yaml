@@ -31,7 +31,7 @@ jobs:
       - name: Configure Poetry
         run: | 
          poetry config virtualenvs.path ~/.virtualenvs
-         poetry config list
+         poetry config --list
 
       - name: Install Python Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
