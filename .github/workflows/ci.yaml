@@ -13,14 +13,8 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.7
-
-      - name: Install Poetry
-        uses: dschep/install-poetry-action@v1.3
-        with:
-          version: 1.0.0
-        run: poetry config settings.virtualenvs.path ~/.virtualenvs
-
-      - name: Cache Poetry Virtualenv
+      
+      - name: Setup Poetry Virtualenv Cache
         uses: actions/cache@v1
         id: cache
         with:
@@ -29,7 +23,15 @@ jobs:
           restore-keys: |
             poetry-${{ hashFiles('**/poetry.lock') }}      
 
-      - name: Install Dependencies
+      - name: Install Poetry
+        uses: dschep/install-poetry-action@v1.3
+        with:
+          version: 1.0.0
+
+      - name: Configure Poetry
+        run: poetry config settings.virtualenvs.path ~/.virtualenvs
+
+      - name: Install Python Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install
 
