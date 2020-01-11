@@ -5,7 +5,7 @@ description = "Python routines for working with GPS time series from a variety o
 authors = ["Scott Henderson <scottyh@uw.edu>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 pandas = "^0.24"
 numpy = "^1.18.1"
 scipy = "^1.4.1"
