@@ -38,4 +38,5 @@ jobs:
         run: poetry run black . --check
 
       - name: Test with Pytest
-        run: poetry run pytest --cov . -n 2
+        run: | 
+         poetry run pytest --cov=gpstools 
