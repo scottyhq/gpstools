@@ -21,10 +21,3 @@ gpstools
     plot
 
 
-## Brief example
-
-Load a gps time series for a specific PBO station from UNGL and JPL and compare the vertical component time series on a plot 
-
-```
-import gpstools as gps
-```
