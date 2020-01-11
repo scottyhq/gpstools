@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gpstools"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python routines for working with GPS time series from a variety of processing centers"
 authors = ["Scott Henderson <scottyh@uw.edu>"]
 license = "GNU General Public License v3.0"

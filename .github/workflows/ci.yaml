@@ -52,5 +52,8 @@ jobs:
           file: ./coverage.xml #optional
 
       - name: Push package to Test PyPi
+        # NOTE: can do this for a pull request and publish to actual PyPi after tagging release
         if: startswith(github.ref, 'refs/tags')
-        run: poetry publish -r testpypi -u ${{ secrets.TESTPYPI_USER }} -p ${{ secrets.TESTPYPI_PASS }}
+        run: |
+          poetry config repositories.testpypi https://test.pypi.org/legacy/
+          poetry publish -r testpypi -u ${{ secrets.TESTPYPI_USER }} -p ${{ secrets.TESTPYPI_PASS }}
