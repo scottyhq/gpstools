@@ -1,24 +1,28 @@
 [tool.poetry]
 name = "gpstools"
-version = "0.0.0"
+version = "0.1.0"
 description = "Python routines for working with GPS time series from a variety of processing centers"
 authors = ["Scott Henderson <scottyh@uw.edu>"]
+license = "GNU General Public License v3.0"
+readme = "README.md"
+homepage = "https://github.com/scottyhq/gpstools"
+repository = "https://github.com/scottyhq/gpstools"
+keywords = ["GPS", "geophysics", "scientific"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
 pandas = "^0.24"
-numpy = "^1.18.1"
-scipy = "^1.4.1"
-matplotlib = "^3.1.2"
-geopandas = "^0.6.2"
-statsmodels = "^0.10.2"
+numpy = "^1.18"
+scipy = "^1.4"
+matplotlib = "^3.1"
+geopandas = "^0.6"
+statsmodels = "^0.10"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
-pytest-cov = "^2.8.1"
+pytest-cov = "^2.8"
 black = {version = "^19.10b0", allow-prereleases = true}
-#dunamai = "^1"
-
+#dunamai = "^1" #currently failing
 
 [build-system]
 requires = ["poetry>=1.0"]
