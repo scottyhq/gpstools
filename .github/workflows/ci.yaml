@@ -46,7 +46,7 @@ jobs:
         run: poetry run pytest --cov=gpstools --cov-report=xml
 
       - name: Upload CodeCov Report for Badge
-      - uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }} #required
           file: ./coverage.xml #optional
