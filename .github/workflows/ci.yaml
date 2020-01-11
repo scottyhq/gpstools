@@ -16,9 +16,8 @@ jobs:
       
       - name: Setup Poetry Virtualenv Cache
         uses: actions/cache@v1
-        id: cache
         with:
-          path: ~/.virtualenvs
+          path: ~/.cache/pypoetry
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
@@ -29,15 +28,11 @@ jobs:
           version: 1.0.0
           create_virtualenvs: true
 
-      - name: Configure Poetry
-        run: | 
-         poetry config virtualenvs.in-project false
-         poetry config virtualenvs.path ~/.virtualenvs
-         poetry config --list
-
       - name: Install Python Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: poetry install
+        run: |
+          poetry config --list
+          poetry install
 
       - name: Code Quality
         run: poetry run black . --check
