@@ -1,5 +1,6 @@
 gpstools/data/*
-
+.coverage
+gpstools.egg-info/
 *.bak
 .DS_Store
 .ipynb_checkpoints/
