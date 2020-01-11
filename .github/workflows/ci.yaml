@@ -21,7 +21,7 @@ jobs:
           path: ~/.virtualenvs
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install Poetry
         uses: dschep/install-poetry-action@v1.3
@@ -31,6 +31,7 @@ jobs:
 
       - name: Configure Poetry
         run: | 
+         poetry config virtualenvs.in-project false
          poetry config virtualenvs.path ~/.virtualenvs
          poetry config --list
 
