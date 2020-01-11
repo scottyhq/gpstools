@@ -1,4 +1,4 @@
-data/*
+gpstools/data/*
 
 *.bak
 .DS_Store
