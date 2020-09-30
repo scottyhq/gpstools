@@ -1,0 +1,13 @@
+name: gpstools
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - geopandas
+  - jupyterlab
+  - matplotlib
+  - pip
+  - scipy
+  - statsmodels
+  - pip:
+    - ./

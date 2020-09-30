@@ -191,7 +191,7 @@ def cull_outliers(df, cols=["detrend1_north", "detrend1_east", "detrend1_up"], n
         # df = df.query('errors >= @thresh') #return dataframe w/ omissions
         ind = errors >= thresh
         print("{}: Culled {} points".format(col, np.sum(ind)))
-        df.ix[ind, col] = np.nan  # return original dataframe with values set to nans
+        df.loc[ind, col] = np.nan  # return original dataframe with values set to nans
 
     return df.dropna()  # fitting functions don't like nans...
 
@@ -201,8 +201,8 @@ def remove_eq1(df, eq, dt=90, showplot=False):
     '''Remove coseismic EQ offset by equalizing means for "dt" days around "eq"'''
     cols = ["up", "north", "east"]
     d = pd.Timedelta(1, "D")
-    df_after = df.ix[eq - d : eq - d + (d * dt), cols]
-    df_before = df.ix[eq - (d * dt) - d : eq - d, cols]
+    df_after = df.loc[eq - d : eq - d + (d * dt), cols]
+    df_before = df.loc[eq - (d * dt) - d : eq - d, cols]
 
     ua, ea, na = df_after.mean()
     ub, eb, nb = df_before.mean()
@@ -237,8 +237,8 @@ def remove_eq2(df, eq, dt=120, showplot=False):
     """Remove coseismic EQ offset by finding linear intercept on data before and after"""
     cols = ["up", "north", "east"]
     d = pd.Timedelta(1, "D")
-    df_after = df.ix[eq - d : eq - d + (d * dt), cols]
-    df_before = df.ix[eq - (d * dt) - d : eq - d, cols]
+    df_after = df.loc[eq - d : eq - d + (d * dt), cols]
+    df_before = df.loc[eq - (d * dt) - d : eq - d, cols]
 
     dfb = fit_linear(df_before)
     dfa = fit_linear(df_after)

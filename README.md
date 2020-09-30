@@ -1,6 +1,6 @@
 # gpstools
 
-Python routines for working with GPS time series from a variety of processing centers. 
+Python routines for working with GPS time series from a variety of processing centers.
 
 ![Action Status](https://github.com/scottyhq/gpstools/workflows/CI/badge.svg)
 [![codecov](https://codecov.io/gh/scottyhq/gpstools/branch/master/graph/badge.svg)](https://codecov.io/gh/scottyhq/gpstools)
@@ -11,16 +11,26 @@ Each processing center distributes data in different formats (typically .csv tex
 
 This is a python package that can be used in scripts via an import statement:
 
+### Basic usage
+
 ```
-import gpstools as gps
+git clone https://github.com/scottyhq/gpstools.git
+cd gpstools
+conda env create -f environment.yml
+conda activate gpstools
+jupyter lab
 ```
 
-The general structure is:
-gpstools
-    data
-    io
-    auxfiles
-    analysis
-    plot
+See example notebooks in `examples` directory
 
-note to retrigger build
+
+### Development
+
+```
+git clone https://github.com/scottyhq/gpstools.git
+cd gpstools
+conda env create -f environment-dev.yml
+conda activate gpstools
+poetry install
+jupyter lab
+```

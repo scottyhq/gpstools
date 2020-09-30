@@ -7,6 +7,7 @@ Created on Fri Apr  1 14:52:00 2016
 @author: scott
 """
 
+import datetime
 import pandas as pd
 import numpy as np
 import os
@@ -21,7 +22,7 @@ from pathlib import Path
 
 datadir = os.path.join(Path(__file__).parent.parent, "data/ungl")
 auxdir = os.path.join(Path(__file__).parent.parent, "auxfiles/ungl")
-print(datadir)
+#print(datadir)
 
 # ---------------------------------------------------------
 #    Functions for Loading UNGL Data
@@ -72,7 +73,7 @@ def load_steps(station):
         """awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' station_steps.txt > steps_code2.txt"""
     )
 
-    dateparse = lambda x: pd.datetime.strptime(x, "%y%b%d")
+    dateparse = lambda x: datetime.datetime.strptime(x, "%y%b%d")
     df1 = pd.read_csv(
         os.path.join(auxdir, "steps_code1.txt"),
         names=["site", "date", "code", "note"],
@@ -111,7 +112,7 @@ def load_steps_code2(station=None):
     return df
 
 
-def load_midas(station=None, refframe="IGS08"):
+def load_midas(station=None, refframe="IGS14"):
     """
     Midas is automatic UNevada GPS velocity solution
 
@@ -181,13 +182,13 @@ def load_midas(station=None, refframe="IGS08"):
 
 def download_data(
     station,
-    refframe,  # 'IGS08' or 'NA12'
+    refframe,  # 'IGS14' or 'NA12'
     overwrite=False,
     outdir=datadir,
-    url="http://geodesy.unr.edu/gps_timeseries/tenv3/",
+    url="http://geodesy.unr.edu/gps_timeseries/tenv3",
 ):
     procede = True
-    localfile = os.path.join(outdir, "{}.{}.tenv3".format(station, refframe))
+    localfile = os.path.join(outdir, "{}.tenv3".format(station, refframe))
     if os.path.exists(localfile):
         if overwrite:
             print("Overwriting " + station)
@@ -196,7 +197,7 @@ def download_data(
             procede = False
 
     if procede:
-        url = "{0}/{1}/{2}.{1}.tenv3".format(url, refframe, station)
+        url = "{0}/{1}/{2}.tenv3".format(url, refframe, station)
         print("Downloading {} ...".format(url))
         # savefile = os.path.basename(url)
         try:
@@ -272,17 +273,17 @@ def decyear2date(decyear, inverse=False):
 
     """
     df = pd.read_csv(
-        os.path.join(auxdir, "decyr.txt"), names=["date", "decyear"], sep=" ",
+        os.path.join('/Users/scott/GitHub/gpstools/gpstools/auxfiles/ungl', "decyr.txt"),
+        skiprows=1,
+        names=['date', 'decimalyr', 'year', 'mm', 'dd', 'hh', 'day', 'mjday', 'week', 'd',  'J2000_sec'],
+        delim_whitespace=True,
     )
     df["datetime"] = pd.to_datetime(df.date, format="%y%b%d")
 
     if inverse:
-        converted = df.decyear[df.date == decyear].values[0]
+        converted = df.decimalyr[df.date == decyear].values[0]
     else:
-        # converted = df.datetime[df.decyear == decyear].values[0] #weird, seems to convert to local timezone via numpy
-        converted = df.datetime[df.decyear == decyear].iloc[
-            0
-        ]  # Keep as pandas timestamp
+        converted = df.datetime[df.decimalyr == decyear].iloc[0]
 
     return converted
 
@@ -293,11 +294,11 @@ def add_midas(df, dfMidas):
     """
     start = decyear2date(dfMidas.start.iloc[0])
     end = decyear2date(dfMidas.end.iloc[0])
-    t = df.ix[start:end, "decyear"] - dfMidas.start.iloc[0]
+    t = df.loc[start:end, "decyear"] - dfMidas.start.iloc[0]
 
-    E0 = df.ix[start, "east"] + dfMidas.e0.iloc[0]
-    N0 = df.ix[start, "north"] + dfMidas.n0.iloc[0]
-    U0 = df.ix[start, "up"] + dfMidas.u0.iloc[0]
+    E0 = df.loc[start, "east"] + dfMidas.e0.iloc[0]
+    N0 = df.loc[start, "north"] + dfMidas.n0.iloc[0]
+    U0 = df.loc[start, "up"] + dfMidas.u0.iloc[0]
 
     rate_east = dfMidas.east.iloc[0]
     rate_north = dfMidas.north.iloc[0]
@@ -305,9 +306,9 @@ def add_midas(df, dfMidas):
     E = E0 + (rate_east * t)
     N = N0 + (rate_north * t)
     U = U0 + (rate_up * t)
-    df.ix[start:end, "midas_east"] = E
-    df.ix[start:end, "midas_north"] = N
-    df.ix[start:end, "midas_up"] = U
+    df.loc[start:end, "midas_east"] = E
+    df.loc[start:end, "midas_north"] = N
+    df.loc[start:end, "midas_up"] = U
 
     rate_east = dfMidas.east.iloc[0] + dfMidas.err_e.iloc[0]
     rate_north = dfMidas.north.iloc[0] + dfMidas.err_n.iloc[0]
@@ -315,9 +316,9 @@ def add_midas(df, dfMidas):
     E = E0 + (rate_east * t)
     N = N0 + (rate_north * t)
     U = U0 + (rate_up * t)
-    df.ix[start:end, "midas_east_ub"] = E
-    df.ix[start:end, "midas_north_ub"] = N
-    df.ix[start:end, "midas_up_ub"] = U
+    df.loc[start:end, "midas_east_ub"] = E
+    df.loc[start:end, "midas_north_ub"] = N
+    df.loc[start:end, "midas_up_ub"] = U
 
     rate_east = dfMidas.east.iloc[0] - dfMidas.err_e.iloc[0]
     rate_north = dfMidas.north.iloc[0] - dfMidas.err_n.iloc[0]
@@ -325,8 +326,8 @@ def add_midas(df, dfMidas):
     E = E0 + (rate_east * t)
     N = N0 + (rate_north * t)
     U = U0 + (rate_up * t)
-    df.ix[start:end, "midas_east_lb"] = E
-    df.ix[start:end, "midas_north_lb"] = N
-    df.ix[start:end, "midas_up_lb"] = U
+    df.loc[start:end, "midas_east_lb"] = E
+    df.loc[start:end, "midas_north_lb"] = N
+    df.loc[start:end, "midas_up_lb"] = U
 
     return df
