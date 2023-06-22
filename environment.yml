@@ -2,12 +2,9 @@ name: gpstools
 channels:
   - conda-forge
 dependencies:
-  - python=3.8
-  - geopandas
-  - jupyterlab
-  - matplotlib
+  - python
+  - matplotlib-base
+  - pandas
   - pip
   - scipy
   - statsmodels
-  - pip:
-    - ./

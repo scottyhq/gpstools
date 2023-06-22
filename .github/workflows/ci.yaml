@@ -2,58 +2,35 @@ name: CI
 
 on:
   push:
-    branches:
-      - master
-    tags:
-      - '*'
+    branches: main
+  pull_request:
+    branches: main
+
+# Allow one concurrent deployment
+concurrency:
+  group: 'test'
+  cancel-in-progress: true
 
 jobs:
   test:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v1
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+      - name: Install Conda environment with Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: 3.7
+          environment-file: environment.yml
+          environment-name: gpstools
+          cache-environment: true
 
-      - name: Setup Poetry Virtualenv Cache
-        uses: actions/cache@v1
-        with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+      - name: Formatting
+        run: black . --check
 
-      - name: Install Poetry
-        uses: dschep/install-poetry-action@v1.3
-        with:
-          version: 1.0.0
-          create_virtualenvs: true
-
-      - name: Install Python Dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          poetry config --list
-          poetry install
-
-      - name: Code Quality
-        run: poetry run black . --check
-
-      - name: Test with Pytest
-        run: poetry run pytest --cov=gpstools --cov-report=xml
-
-      - name: Upload CodeCov Report for Badge
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} #required
-          file: ./coverage.xml #optional
-
-      - name: Push package to Test PyPi
-        # NOTE: can do this for a pull request and publish to actual PyPi after tagging release
-        if: startswith(github.ref, 'refs/tags')
-        run: |
-          poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry publish -r testpypi -u ${{ secrets.TESTPYPI_USER }} -p ${{ secrets.TESTPYPI_PASS }}
+      - name: PyTest
+        run: pytest --cov=gpstools

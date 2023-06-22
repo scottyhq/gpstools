@@ -14,14 +14,11 @@ This is a python package that can be used in scripts via an import statement:
 ### Basic usage
 
 ```
-git clone https://github.com/scottyhq/gpstools.git
-cd gpstools
-conda env create -f environment.yml
-conda activate gpstools
-jupyter lab
+pip install https://github.com/scottyhq/gpstools.git
+import gpstools
+# See example notebooks in `examples` directory
 ```
 
-See example notebooks in `examples` directory
 
 
 ### Development
@@ -29,8 +26,7 @@ See example notebooks in `examples` directory
 ```
 git clone https://github.com/scottyhq/gpstools.git
 cd gpstools
-conda env create -f environment-dev.yml
+conda env create -f environment.yml
 conda activate gpstools
-poetry install
-jupyter lab
+pip install -e ".[dev]"
 ```

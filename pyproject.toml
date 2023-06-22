@@ -1,28 +1,38 @@
-[tool.poetry]
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/#declaring-project-metadata
+[project]
 name = "gpstools"
-version = "0.1.1"
-description = "Python routines for working with GPS time series from a variety of processing centers"
-authors = ["Scott Henderson <scottyh@uw.edu>"]
-license = "GNU General Public License v3.0"
+description = "Python routines for working with GPS time series from a variety of processing center"
+authors = [{ name="Scott Henderson", email="scottyh@uw.edu" }]
+license = {text = "GNU General Public License v3.0"}
 readme = "README.md"
+keywords = ["GPS", "geophysics", "scientific"]
+# Use setuptools_scm for automatic version tags
+dynamic = ["version"]
+requires-python = ">=3.8"
+dependencies = [
+    "pandas >= 1",
+    "scipy >= 1",
+    "matplotlib >= 3",
+    "statsmodels >= 0",
+    ]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "black",
+]
+
+[project.urls]
 homepage = "https://github.com/scottyhq/gpstools"
 repository = "https://github.com/scottyhq/gpstools"
-keywords = ["GPS", "geophysics", "scientific"]
-
-[tool.poetry.dependencies]
-python = "^3.8"
-pandas = "^1"
-numpy = "^1"
-scipy = "^1"
-matplotlib = "^3"
-geopandas = "^0"
-statsmodels = "^0"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5"
-pytest-cov = "^2"
-black = "^20.8b1"
 
 [build-system]
-requires = ["poetry>=1.0"]
-build-backend = "poetry.masonry.api"
+requires = [
+    "setuptools >= 66",
+    "setuptools_scm[toml]>=6.2",
+]
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools_scm]
+fallback_version = "unknown"
