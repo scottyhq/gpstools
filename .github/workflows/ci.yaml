@@ -37,5 +37,5 @@ jobs:
         run: black . --check
 
       - name: PyTest 
-        continue-on-error: true
+        continue-on-error: false
         run: pytest --cov=gpstools
