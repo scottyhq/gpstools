@@ -13,7 +13,6 @@ concurrency:
 
 jobs:
   test:
-    continue-on-error: true
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,7 +33,9 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Formatting
+        continue-on-error: true
         run: black . --check
 
-      - name: PyTest
+      - name: PyTest 
+        continue-on-error: true
         run: pytest --cov=gpstools
