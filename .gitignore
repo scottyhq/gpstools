@@ -1,5 +1,7 @@
 # Custom
 gpstools/data/*
+tests/data
+*.pdf
 *.bak
 .DS_Store
 

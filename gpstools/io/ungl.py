@@ -73,20 +73,19 @@ def load_steps(station):
         """awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' station_steps.txt > steps_code2.txt"""
     )
 
-    dateparse = lambda x: datetime.datetime.strptime(x, "%y%b%d")
     df1 = pd.read_csv(
         os.path.join(auxdir, "steps_code1.txt"),
         names=["site", "date", "code", "note"],
         delim_whitespace=True,
         parse_dates=["date"],
-        date_parser=dateparse,
+        date_format="%y%b%d"
     )
     df2 = pd.read_csv(
         os.path.join(auxdir, "steps_code2.txt"),
         names=["site", "date", "code", "thresh_d", "distance", "mag", "id"],
         delim_whitespace=True,
         parse_dates=["date"],
-        date_parser=dateparse,
+        date_format="%y%b%d"
     )
     os.chdir(pwd)
 
@@ -237,6 +236,9 @@ def load_tenv3(envfile):
             "corr_en",
             "corr_eu",
             "corr_nu",
+            "latitude",
+            "longitude",
+            "height"
         ],
         delim_whitespace=True,
     )
