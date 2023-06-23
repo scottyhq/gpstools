@@ -3,11 +3,12 @@ from pathlib import Path
 import os.path
 import pandas
 import numpy as np
+import time
 
 ROOTDIR = Path(__file__).parent.parent
 TESTDATA = str(ROOTDIR / 'tests/data')
-AUXDIR = str(ROOTDIR / 'gpstools/auxfiles')
-DATADIR = str(ROOTDIR / 'gpstools/data')
+AUXDIR = gps.AUXDIR
+DATADIR = gps.DATADIR
 
 #STATION = 'UTUR'
 STATION = 'HUSB'

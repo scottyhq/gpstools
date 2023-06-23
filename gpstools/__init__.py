@@ -4,6 +4,11 @@ Package for working with GPS time series
 
 __all__ = ["io", "plot", "analysis", "auxfiles"]
 
+import os 
+
+DATADIR = '/tmp'
+AUXDIR = os.path.abspath('./gpstools/auxfiles')
+
 import pkg_resources
 
 # https://github.com/python-poetry/poetry/issues/144#issuecomment-559793020

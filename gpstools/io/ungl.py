@@ -7,12 +7,13 @@ import pandas as pd
 import numpy as np
 import os.path
 import urllib
-
 from pathlib import Path
+import sys
 
-datadir = os.path.join(Path(__file__).parent.parent, "data/ungl")
-auxdir = os.path.join(Path(__file__).parent.parent, "auxfiles/ungl")
-#print(datadir)
+datadir = os.path.join(sys.modules['gpstools'].DATADIR, 'ungl')
+if not os.path.isdir(datadir):
+    os.makedirs(datadir)
+auxdir = os.path.join(sys.modules['gpstools'].AUXDIR, 'ungl')
 
 # ---------------------------------------------------------
 #    Functions for Loading UNGL Data

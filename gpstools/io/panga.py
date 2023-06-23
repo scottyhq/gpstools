@@ -12,11 +12,13 @@ import os
 import urllib
 import pandas as pd
 import datetime as DT
-
+import sys
 from pathlib import Path
 
-datadir = os.path.join(Path(__file__).parent.parent, "data/panga")
-auxdir = os.path.join(Path(__file__).parent.parent, "auxfiles/panga")
+datadir = os.path.join(sys.modules['gpstools'].DATADIR, 'panga')
+if not os.path.isdir(datadir):
+    os.makedirs(datadir)
+auxdir = os.path.join(sys.modules['gpstools'].AUXDIR, 'panga')
 
 
 def load_stations(file=os.path.join(auxdir, "sites.csv"), station=None):
