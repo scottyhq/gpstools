@@ -52,9 +52,9 @@ class TestUNGL:
     def test_read_midas(self):
         df = gps.io.ungl.load_midas(STATION)
         assert isinstance(df, pandas.DataFrame)
-        assert len(df.columns) == 24
+        assert len(df.columns) == 27
         assert isinstance(df.index, pandas.Index)
-        assert df.version.iloc[0] == 'MIDAS4'
+        assert df.version.iloc[0] == 'MIDAS5'
 
     def test_load_steps_only_earthquakes(self):
         dfCh, dfEq = gps.io.ungl.load_steps(station=STATION)
@@ -73,6 +73,10 @@ class TestPanga:
     gps.io.panga.download_data('TPW2')
 
     def test_read_panga(self):
+        try:
+            os.listdir('/home/runner/work/gpstools/gpstools/gpstools/data/panga/')
+        except:
+            pass
         df = gps.io.panga.load_panga('TPW2')
         assert isinstance(df, pandas.DataFrame)
         assert isinstance(df.index, pandas.DatetimeIndex)

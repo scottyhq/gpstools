@@ -98,6 +98,9 @@ def load_midas(station=None, refframe="IGS14"):
             "sig_n",
             "sig_u",
             "nsteps",
+            "latitude",
+            "longitude",
+            "height",
         ],
         delim_whitespace=True,
     )
@@ -132,13 +135,22 @@ def download_data(
     refframe,  # 'IGS14' or 'NA'
     overwrite=False,
     outdir=datadir,
+    loadpredictions=False,
     url="http://geodesy.unr.edu/gps_timeseries/tenv3",
 ):
+    """ 24 hour final solutions:
+        http://geodesy.unr.edu/gps_timeseries/tenv3_loadpredictions/HUSB.tenv3 
+        http://geodesy.unr.edu/gps_timeseries/tenv3/IGS14/HUSB.tenv3
+        http://geodesy.unr.edu/gps_timeseries/tenv3/plates/NA/HUSB.NA.tenv3
+    """
     procede = True
     if refframe == 'NA':
         url = f"{url}/plates/{refframe}/{station}.{refframe}.tenv3"
     else:
         url = f"{url}/{refframe}/{station}.tenv3"
+        if loadpredictions:
+            url = url.replace('tenv3/IGS14', 'tenv3_loadpredictions')
+        
     localfile = os.path.join(outdir, os.path.basename(url))
     if os.path.exists(localfile):
         if overwrite:
@@ -159,38 +171,70 @@ def download_data(
     return localfile
 
 
-def load_tenv3(envfile):
-    """Load GPS timeseries into pandas dataframe with timestamps as index """
+def load_tenv3(envfile, loadpredictions=False):
+    """Load GPS timeseries into pandas dataframe with timestamps as index 
+    
+    Renames default column headings:
+    site YYMMMDD yyyy.yyyy __MJD week d reflon _e0(m) __east(m) ____n0(m) _north(m) u0(m) ____up(m) _ant(m) sig_e(m) sig_n(m) sig_u(m) __corr_en __corr_eu __corr_nu __ee_ntal __nn_ntal __uu_ntal __ee_ntol __nn_ntol __uu_ntol __ee_hydl __nn_hydl __uu_hydl __ee_masc __nn_masc __uu_masc __ee_rese __nn_rese __uu_rese __ee_wus_ __nn_wus_ __uu_wus_ __ee_wusa __nn_wusa __uu_wusa
+    """
     # http://geodesy.unr.edu/gps_timeseries/README_tenv3.txt
+    # http://geodesy.unr.edu/gps_timeseries/README_tenv3load.txt
+    # Overwrite
+    names=[
+        "site",
+        "date",
+        "decyear",
+        "mjd",
+        "week",
+        "day",
+        "reflon",
+        "e0",
+        "east",
+        "n0",
+        "north",
+        "u0",
+        "up",
+        "ant",
+        "sig_e",
+        "sig_n",
+        "sig_u",
+        "corr_en",
+        "corr_eu",
+        "corr_nu"]
+
+    loadnames = [
+        'ee_ntal',
+        'nn_ntal',
+        'uu_ntal',
+        'ee_ntol',
+        'nn_ntol',
+        'uu_ntol',
+        'ee_hydl',
+        'nn_hydl',
+        'uu_hydl',
+        'ee_masc',
+        'nn_masc',
+        'uu_masc',
+        'ee_rese',
+        'nn_rese',
+        'uu_rese',
+        'ee_wus',
+        'nn_wus',
+        'uu_wus',
+        'ee_wusa',
+        'nn_wusa',
+        'uu_wusa']
+    
+    if loadpredictions:
+        names += loadnames
+    else:
+        names += ["latitude", "longitude", "height"]
+
     df = pd.read_csv(
         envfile,
         skiprows=1,
         header=None,
-        names=[
-            "site",
-            "date",
-            "decyear",
-            "mjd",
-            "week",
-            "day",
-            "reflon",
-            "e0",
-            "east",
-            "n0",
-            "north",
-            "u0",
-            "up",
-            "ant",
-            "sig_e",
-            "sig_n",
-            "sig_u",
-            "corr_en",
-            "corr_eu",
-            "corr_nu",
-            "latitude",
-            "longitude",
-            "height"
-        ],
+        names=names,
         delim_whitespace=True,
     )
 
@@ -206,9 +250,9 @@ def load_tenv3(envfile):
         "corr_eu",
         "corr_nu",
     ]
+
     df[convert] = df[convert] * 1e3
 
-    # df.set_index('date')
     df.index = pd.to_datetime(df.date, format="%y%b%d")
 
     return df
