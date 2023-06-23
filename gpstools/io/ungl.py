@@ -1,22 +1,12 @@
-# -*- coding: utf-8 -*-
 """
-Functions for working with GPS data
-
-Created on Fri Apr  1 14:52:00 2016
-
-@author: scott
+Functions for working with GPS data from University of Nevada Geodetic Library
 """
 
 import datetime
 import pandas as pd
 import numpy as np
-import os
+import os.path
 import urllib
-
-import statsmodels.api as sm
-from scipy.optimize import curve_fit
-from scipy.signal import sawtooth
-from scipy import stats
 
 from pathlib import Path
 
@@ -51,64 +41,22 @@ def load_stations(file=os.path.join(auxdir, "DataHoldings.txt"), station=None):
     return df
 
 
-def load_stations_old(file=os.path.join(auxdir, "llh")):
-    """
-    Get station names and positions from UNGL file
-    """
-    df = pd.read_csv(
-        file, names=["site", "lat", "lon", "height"], delim_whitespace=True,
-    )
-    return df
-
-
 def load_steps(station):
-    """Load Unevada shifts for give 4 character station name """
-    pwd = os.getcwd()
-    os.chdir(auxdir)
-    os.system("grep --color=never {0} steps.txt > station_steps.txt".format(station))
-    os.system(
-        """awk -F" " '$3 == "1" { print $1,$2,$3,$4}' station_steps.txt > steps_code1.txt"""
+    """
+    Load nearby earthquakes and equipment related changes
+    It is a ragged CSV, so parsing is awkward!
+    """
+    df = pd.read_csv(os.path.join(auxdir, "steps.txt"),
+                     names=["site", "date", "code", "note","distance", "mag", "id"],
+                     delim_whitespace=True,
+                     parse_dates=["date"],
+                     date_format="%y%b%d"
     )
-    os.system(
-        """awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' station_steps.txt > steps_code2.txt"""
-    )
-
-    df1 = pd.read_csv(
-        os.path.join(auxdir, "steps_code1.txt"),
-        names=["site", "date", "code", "note"],
-        delim_whitespace=True,
-        parse_dates=["date"],
-        date_format="%y%b%d"
-    )
-    df2 = pd.read_csv(
-        os.path.join(auxdir, "steps_code2.txt"),
-        names=["site", "date", "code", "thresh_d", "distance", "mag", "id"],
-        delim_whitespace=True,
-        parse_dates=["date"],
-        date_format="%y%b%d"
-    )
-    os.chdir(pwd)
-
+    df = df[df.site == station]
+    df1 = df.loc[df.code == 1, ["site", "date", "code", "note"]]
+    df2 = df[df.code == 2].rename(columns={'note':'thresh_d'})
+    
     return df1, df2
-
-
-def load_steps_code2(station=None):
-    """Load Unevada shifts for give 4 character station name """
-    # NOTE: isloate just EQ-related steps:
-    # awk -F" " '$3 == "2" { print $1,$2,$3,$4,$5,$6,$7 }' steps.txt > steps_code2.txt
-    df = pd.read_csv(
-        os.path.join(auxdir, "steps_code2.txt"),
-        names=["site", "date", "code", "thresh_d", "distance", "mag", "id"],
-        delim_whitespace=True,
-    )
-
-    # df.set_index('date')
-    df.index = pd.to_datetime(df.date, format="%y%b%d")
-
-    if station:
-        df = df[df.site == station]  # if not specific station, return whole database
-
-    return df
 
 
 def load_midas(station=None, refframe="IGS14"):

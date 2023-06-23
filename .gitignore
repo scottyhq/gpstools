@@ -1,7 +1,4 @@
 # Custom
-gpstools/auxfiles/ungl/station_steps.txt 
-gpstools/auxfiles/ungl/steps_code1.txt   
-gpstools/auxfiles/ungl/steps_code2.txt
 gpstools/data/*
 tests/data
 *.pdf
