@@ -106,7 +106,7 @@ def load_panga(site):
     """Load GPS timeseries into pandas dataframe with timestamps as index """
     # http://www.geodesy.cwu.edu/data/bysite/   'east', 'n0', 'north', 'u0', 'up'
     def load_csv(path):
-        print(path)
+        #print(path)
         tmp = pd.read_csv(
             path,
             comment="#",

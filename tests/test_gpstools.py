@@ -79,6 +79,15 @@ class TestUNGL:
         assert len(dfEq) > 0
 
 
+class TestSopac:
+    def test_load_timeseries(self):
+        df = gps.io.sopac.load_timeseries(STATION)
+        assert isinstance(df, pandas.DataFrame)
+        assert isinstance(df.index, pandas.DatetimeIndex)
+        assert len(df.columns) == 12
+        assert list(df) == ['decyr','year','dayofyear','north','east','up','sig_n','sig_e','sig_u','corr_en','corr_nu','corr_eu']
+
+
 class TestPanga:
     # gps.io.panga.download_data('TPW2')
     def test_download_overwrite(self):
