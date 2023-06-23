@@ -2,17 +2,8 @@
 Functions for working with PANGA GPS data
 http://www.geodesy.cwu.edu/data/bysite/
 
-#NOTE: about 400MB for all files, updated daily
+#NOTE: about 400MB for all stations, updated daily:
 http://www.geodesy.cwu.edu/panga/officialresults/archives/panga_raw.zip
-
-http://www.geodesy.cwu.edu/panga/timeseries_data.php?n=panga&s=TPW2&p=cleaned&f=daily&c=lat
-http://www.geodesy.cwu.edu/panga/timeseries_data.php?n=panga&s=TPW2&p=cleaned&f=daily&c=lon
-http://www.geodesy.cwu.edu/panga/timeseries_data.php?n=panga&s=TPW2&p=cleaned&f=daily&c=rad
-
-http://www.geodesy.cwu.edu/panga/timeseries_data.php?n=panga&s=TPW2&p=raw&f=daily&c=lat
-http://www.geodesy.cwu.edu/panga/timeseries_data.php?n=panga&s=TPW2&p=raw&f=daily&c=rad
-
-
 
 Data acknowledgement should read "GPS time series provided by the Pacific Northwest Geodetic Array, Central Washington University."
 """
@@ -50,7 +41,7 @@ def download_data(
     product="raw",
     overwrite=False,
     outdir=datadir,
-    baseurl="http://www.geodesy.org/panga/timeseries_data.php",
+    baseurl="http://www.geodesy.org/cgi-bin/timeseries_data.pl",
 ):
     procede = True
     names = dict(lon="e", lat="n", rad="u")

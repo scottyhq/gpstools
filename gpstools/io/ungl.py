@@ -129,13 +129,17 @@ def load_midas(station=None, refframe="IGS14"):
 
 def download_data(
     station,
-    refframe,  # 'IGS14' or 'NA12'
+    refframe,  # 'IGS14' or 'NA'
     overwrite=False,
     outdir=datadir,
     url="http://geodesy.unr.edu/gps_timeseries/tenv3",
 ):
     procede = True
-    localfile = os.path.join(outdir, "{}.tenv3".format(station, refframe))
+    if refframe == 'NA':
+        url = f"{url}/plates/{refframe}/{station}.{refframe}.tenv3"
+    else:
+        url = f"{url}/{refframe}/{station}.tenv3"
+    localfile = os.path.join(outdir, os.path.basename(url))
     if os.path.exists(localfile):
         if overwrite:
             print("Overwriting " + station)
@@ -144,8 +148,7 @@ def download_data(
             procede = False
 
     if procede:
-        url = "{0}/{1}/{2}.tenv3".format(url, refframe, station)
-        print("Downloading {} ...".format(url))
+        print(f"Downloading {url} ...")
         # savefile = os.path.basename(url)
         try:
             localfile, result = urllib.request.urlretrieve(url, localfile)

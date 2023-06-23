@@ -32,8 +32,10 @@ class TestUNGL:
         assert len(df) != 0
 
     def test_download_single_station(self):
-        tenv3 = gps.io.ungl.download_data(STATION, 'IGS14', outdir=TESTDATA)
-        assert os.path.isfile(tenv3)
+        igs14 = gps.io.ungl.download_data(STATION, 'IGS14', outdir=TESTDATA)
+        na = gps.io.ungl.download_data(STATION, 'NA', outdir=TESTDATA)
+        assert os.path.isfile(igs14)
+        assert os.path.isfile(na)
 
     def test_read_tenv3(self):
         df = gps.io.ungl.load_tenv3(f'{TESTDATA}/{STATION}.tenv3')
@@ -54,18 +56,28 @@ class TestUNGL:
         assert isinstance(df.index, pandas.Index)
         assert df.version.iloc[0] == 'MIDAS4'
 
-    def test_load_steps(self):
+    def test_load_steps_only_earthquakes(self):
         dfCh, dfEq = gps.io.ungl.load_steps(station=STATION)
         assert isinstance(dfCh, pandas.DataFrame)
         assert list(dfCh) == ['site', 'date', 'code', 'note'] 
         assert isinstance(dfEq, pandas.DataFrame)
         assert list(dfEq) == ['site', 'date', 'code', 'thresh_d', 'distance', 'mag', 'id']
 
+    def test_load_steps(self):
+        dfCh, dfEq = gps.io.ungl.load_steps(station='DWH1')
+        assert len(dfCh) == 1
+        assert len(dfEq) > 0
 
-# class TestPanga:
-#     def test_download_single_station(self):
-#         tenv3 = gps.io.ungl.download_data('TPW2', 'ITRF2008', outdir=TESTDATA)
-#         assert os.path.isfile(tenv3)
+
+class TestPanga:
+    gps.io.panga.download_data('TPW2')
+
+    def test_read_panga(self):
+        df = gps.io.panga.load_panga('TPW2')
+        assert isinstance(df, pandas.DataFrame)
+        assert isinstance(df.index, pandas.DatetimeIndex)
+        assert len(df.columns) == 7
+        assert list(df) == ['decyear', 'east', 'err_e', 'north', 'err_n', 'up', 'err_u']
 
 
 class TestAnalysis:

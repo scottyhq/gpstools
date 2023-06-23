@@ -17,6 +17,7 @@ import numpy as np
 #    Analysis Functions
 # ---------------------------------------------------------
 def find_nearest_trench_point(value):
+    # TODO: remove hardcoded path
     path = "/Volumes/OptiHDD/data/plates/PLATES/PLATES_PlateBoundary_ArcGIS/trench.txt"
     tlon, tlat = np.loadtxt(path, unpack=True)
     idx = (np.abs(tlat - value)).argmin()
@@ -80,8 +81,8 @@ def detrend(df, col="up"):
     """
     remove linear trend from GPS data
     """
-    df["ints"] = df.index.asi8
-    df["elapsed_s"] = (df.ints - df.ints[0]) / 1e9  # sec
+    df.loc[:,"ints"] = df.index.asi8
+    df.loc[:,"elapsed_s"] = (df.ints - df.ints[0]) / 1e9  # sec
 
     y = df[col]  # response
     X = df.elapsed_s  # predictor
@@ -90,9 +91,9 @@ def detrend(df, col="up"):
     est = model.fit()
     rate = est.params[1] * 3.1536e7
     print("Rate [mm/yr]={}".format(rate))
-    # print(est.summary()) # Big stats-rich summary!
-    df["linear_fit"] = est.predict(X)
-    df["detrend"] = y - df.linear_fit
+    # print(est.summary()) 
+    df.loc[:,"linear_fit"] = est.predict(X)
+    df.loc[:,"detrend"] = y - df.linear_fit
 
     return df
 
