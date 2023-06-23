@@ -38,4 +38,7 @@ jobs:
 
       - name: PyTest 
         continue-on-error: false
-        run: pytest --cov=gpstools
+        run: | 
+          pwd
+          ls -lh *
+          pytest --cov=gpstools
