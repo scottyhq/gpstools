@@ -275,7 +275,7 @@ def decyear2date(decyear, inverse=False):
 
     """
     df = pd.read_csv(
-        os.path.join('/Users/scott/GitHub/gpstools/gpstools/auxfiles/ungl', "decyr.txt"),
+        os.path.join(auxdir, "decyr.txt"),
         skiprows=1,
         names=['date', 'decimalyr', 'year', 'mm', 'dd', 'hh', 'day', 'mjday', 'week', 'd',  'J2000_sec'],
         delim_whitespace=True,

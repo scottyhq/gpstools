@@ -1,4 +1,5 @@
 # Custom
+gpstools/auxfiles/ungl/steps*
 gpstools/data/*
 tests/data
 *.pdf
