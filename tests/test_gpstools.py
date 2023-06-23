@@ -11,6 +11,7 @@ DATADIR = str(ROOTDIR / 'gpstools/data')
 
 #STATION = 'UTUR'
 STATION = 'HUSB'
+#STATION = 'TPW2' 
 
 def test_version_string():
     assert isinstance(gps.__version__, str)
@@ -36,6 +37,14 @@ class TestUNGL:
         na = gps.io.ungl.download_data(STATION, 'NA', outdir=TESTDATA)
         assert os.path.isfile(igs14)
         assert os.path.isfile(na)
+
+    def test_download_overwrite(self):
+        path = os.path.join(DATADIR,'ungl',f'{STATION}.tenv3')
+        igs14 = gps.io.ungl.download_data(STATION, 'IGS14')
+        old_time = os.path.getmtime(path)
+        igs14 = gps.io.ungl.download_data(STATION, 'IGS14', overwrite=True)
+        new_time = os.path.getmtime(path)
+        assert new_time > old_time
 
     def test_read_tenv3(self):
         df = gps.io.ungl.load_tenv3(f'{TESTDATA}/{STATION}.tenv3')
@@ -70,14 +79,17 @@ class TestUNGL:
 
 
 class TestPanga:
-    gps.io.panga.download_data('TPW2')
+    # gps.io.panga.download_data('TPW2')
+    def test_download_overwrite(self):
+        path = os.path.join(DATADIR,'panga',f'{STATION}e.csv')
+        gps.io.panga.download_data(STATION)
+        old_time = os.path.getmtime(path)
+        gps.io.panga.download_data(STATION, overwrite=True)
+        new_time = os.path.getmtime(path)
+        assert new_time > old_time   
 
     def test_read_panga(self):
-        try:
-            os.listdir('/home/runner/work/gpstools/gpstools/gpstools/data/panga/')
-        except:
-            pass
-        df = gps.io.panga.load_panga('TPW2')
+        df = gps.io.panga.load_panga(STATION)
         assert isinstance(df, pandas.DataFrame)
         assert isinstance(df.index, pandas.DatetimeIndex)
         assert len(df.columns) == 7
