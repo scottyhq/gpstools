@@ -2,10 +2,11 @@ name: gpstools
 channels:
   - conda-forge
 dependencies:
-  - python
+  - aiottp
   - fsspec
   - matplotlib-base
   - pandas
   - pip
+  - python
   - scipy
   - statsmodels
